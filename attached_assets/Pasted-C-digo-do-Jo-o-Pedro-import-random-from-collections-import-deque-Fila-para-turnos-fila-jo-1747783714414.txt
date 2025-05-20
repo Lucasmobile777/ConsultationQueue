@@ -1,0 +1,123 @@
+Código do João Pedro 
+
+import random
+from collections import deque
+
+# Fila para turnos
+fila_jogadores = deque()
+
+# Lista do tabuleiro
+tabuleiro = ["" for _ in range(30)]
+
+# Pilha de cartas
+pilha_cartas = []
+
+# Posições especiais no tabuleiro
+casas_especiais = {
+    5: "avance_2",
+    10: "volte_3",
+    15: "perde_turno",
+    20: "troque",
+    25: "puxe_carta"
+}
+
+# Posições dos jogadores
+posicoes = {}
+
+# Estado dos turnos (se perdeu ou não)
+perdeu_turno = {}
+
+# Função para criar jogadores
+def iniciar_jogo():
+    num_jogadores = int(input("Quantos jogadores? (2 a 4): "))
+    for i in range(num_jogadores):
+        nome = input(f"Nome do jogador {i+1}: ")
+        fila_jogadores.append(nome)
+        posicoes[nome] = 0
+        perdeu_turno[nome] = False
+
+    # Embaralha cartas da pilha
+    cartas = ["Avance 3 casas", "Jogue novamente", "Volte 2 casas", "Troque de lugar com o líder"]
+    random.shuffle(cartas)
+    for carta in cartas:
+        pilha_cartas.append(carta)
+
+# Função de jogar o dado
+def jogar_dado():
+    return random.randint(1, 6)
+
+# Função para aplicar efeitos das casas
+def aplicar_efeito(jogador):
+    pos = posicoes[jogador]
+    if pos in casas_especiais:
+        efeito = casas_especiais[pos]
+        if efeito == "avance_2":
+            print(f"{jogador} caiu em 'Avance 2 casas'!")
+            posicoes[jogador] = min(pos + 2, len(tabuleiro) - 1)
+        elif efeito == "volte_3":
+            print(f"{jogador} caiu em 'Volte 3 casas'!")
+            posicoes[jogador] = max(0, pos - 3)
+        elif efeito == "perde_turno":
+            print(f"{jogador} caiu em 'Perde o próximo turno'!")
+            perdeu_turno[jogador] = True
+        elif efeito == "troque":
+            outros = [j for j in posicoes if j != jogador]
+            if outros:
+                oponente = random.choice(outros)
+                print(f"{jogador} trocou de lugar com {oponente}!")
+                posicoes[jogador], posicoes[oponente] = posicoes[oponente], posicoes[jogador]
+        elif efeito == "puxe_carta":
+            if pilha_cartas:
+                carta = pilha_cartas.pop()
+                print(f"{jogador} puxou uma carta: '{carta}'")
+                aplicar_carta(jogador, carta)
+
+# Função para aplicar cartas
+def aplicar_carta(jogador, carta):
+    if carta == "Avance 3 casas":
+        posicoes[jogador] = min(posicoes[jogador] + 3, len(tabuleiro) - 1)
+    elif carta == "Jogue novamente":
+        print(f"{jogador} ganhou um novo turno!")
+        turno(jogador)
+    elif carta == "Volte 2 casas":
+        posicoes[jogador] = max(0, posicoes[jogador] - 2)
+    elif carta == "Troque de lugar com o líder":
+        lider = max(posicoes, key=posicoes.get)
+        if lider != jogador:
+            print(f"{jogador} trocou com {lider}!")
+            posicoes[jogador], posicoes[lider] = posicoes[lider], posicoes[jogador]
+
+# Função para executar um turno
+def turno(jogador):
+    if perdeu_turno[jogador]:
+        print(f"{jogador} perdeu o turno!")
+        perdeu_turno[jogador] = False
+        return
+    input(f"\n{jogador}, pressione ENTER para jogar o dado.")
+    valor = jogar_dado()
+    print(f"{jogador} tirou {valor} no dado!")
+    nova_pos = min(posicoes[jogador] + valor, len(tabuleiro) - 1)
+    posicoes[jogador] = nova_pos
+    print(f"{jogador} está agora na casa {nova_pos}.")
+
+    aplicar_efeito(jogador)
+
+# Função principal do jogo
+def jogar_corrida():
+    iniciar_jogo()
+    vencedor = None
+
+    while not vencedor:
+        jogador = fila_jogadores.popleft()
+        turno(jogador)
+
+        if posicoes[jogador] >= len(tabuleiro) - 1:
+            vencedor = jogador
+            break
+
+        fila_jogadores.append(jogador)
+
+    print(f"\n🎉 {vencedor} venceu a Corrida Maluca! 🏁")
+
+# Inicia o jogo
+jogar_corrida()
