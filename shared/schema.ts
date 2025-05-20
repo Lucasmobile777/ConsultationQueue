@@ -47,7 +47,10 @@ export const insertPlayerSchema = createInsertSchema(players).omit({
   id: true,
 });
 
-export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
+export type InsertPlayer = z.infer<typeof insertPlayerSchema> & {
+  position?: number;
+  perdeuTurno?: boolean;
+};
 export type Player = typeof players.$inferSelect;
 
 export const gameEvents = pgTable("game_events", {
